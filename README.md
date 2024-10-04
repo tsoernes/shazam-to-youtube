@@ -1,6 +1,7 @@
 # shazam-to-youtube
+![PyPI](https://img.shields.io/pypi/v/shazam-to-youtube)
 ## Create a Youtube Playlist from Shazam hits
-![](shazam-to-youtube.jpeg)
+<img src="shazam-to-youtube.jpeg" width="50%">
 ### Installation
 1. `pip install -U shazam-to-youtube`
 2. Download Shazam playlist CSV from your account at [https://www.shazam.com/myshazam](https://www.shazam.com/myshazam)
