@@ -1,5 +1,6 @@
 # shazam-to-youtube
 ## Create a Youtube Playlist from Shazam hits
+![](shazam-to-youtube.jpeg)
 ### Installation
 1. `pip install -U shazam-to-youtube`
 2. Download Shazam playlist CSV from your account at [https://www.shazam.com/myshazam](https://www.shazam.com/myshazam)
