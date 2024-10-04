@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "shazam-to-youtube"
-version = "0.1.1"
+version = "0.1.3"
 description = "Create a Youtube Playlist from Shazam hits"
 packages = [{ include = "shazam_to_youtube" }]
 authors = ["Torstein Sørnes <t.soernes@gmail.com>"]
@@ -20,3 +20,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 shazam-to-youtube = "shazam_to_youtube.main:run_main"
 shazam-to-youtube-yt-auth = "shazam_to_youtube.yt_auth:run_main"
+
+[tool.poetry-pyinstaller-plugin]
+version = "latest"

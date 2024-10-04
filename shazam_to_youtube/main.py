@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
 from spotify2ytmusic import backend
+from ytmusicapi.setup import main as yt_auth_main
 
 # Download CSV at https://www.shazam.com/myshazam
 base_dir = Path.home() / "Downloads"
@@ -63,6 +65,11 @@ def main(
 ):
     if not path.exists():
         raise FileNotFoundError(path)
+    oauth_path = Path().cwd() / "oath.json"
+    if not oauth_path.exists():
+        sys.argv = ["ytmusicapi", "oauth"]
+        yt_auth_main()
+
     df = pd.read_csv(path, skiprows=1)
     df.drop_duplicates("TrackKey", inplace=True)
 
