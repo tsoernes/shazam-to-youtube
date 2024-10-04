@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "shazam-to-youtube"
+version = "0.1.0"
+description = ""
+authors = ["Torstein Sørnes <t.soernes@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+pandas = "^2.2.3"
+spotify2ytmusic = "^0.9.30"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
