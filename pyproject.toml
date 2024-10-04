@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "shazam-to-youtube"
 version = "0.1.1"
-description = ""
+description = "Create a Youtube Playlist from Shazam hits"
 packages = [{ include = "shazam_to_youtube" }]
 authors = ["Torstein Sørnes <t.soernes@gmail.com>"]
 license = "MIT"
