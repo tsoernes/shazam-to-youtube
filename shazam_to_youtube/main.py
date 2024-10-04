@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import json
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -7,8 +6,8 @@ import pandas as pd
 from spotify2ytmusic import backend
 
 # Download CSV at https://www.shazam.com/myshazam
-base_dir = Path.home() / ("Downloads")
-default_shazam__csv_path = base_dir / "shazamlibrary.csv"
+base_dir = Path.home() / "Downloads"
+default_shazam_csv_path = base_dir / "shazamlibrary.csv"
 
 
 def parse_arguments():
@@ -17,12 +16,13 @@ def parse_arguments():
         "--path",
         type=Path,
         help="Shazam playlist CSV path",
-        default=default_shazam__csv_path,
+        default=default_shazam_csv_path,
     )
     parser.add_argument(
         "--ytmusic_playlist_id",
         type=str,
         help="ID of the YTMusic playlist to copy to. If this argument starts with a '+', it is asumed to be the playlist title rather than playlist ID, and if a playlist of that name is not found, it will be created (without the +).  Example: '+My Favorite Blues'. NOTE: The shell will require you to quote the name if it contains spaces.",
+        default="+Shazam Playlist",
     )
     parser.add_argument(
         "--track-sleep",
@@ -42,17 +42,28 @@ def parse_arguments():
         help="Algorithm to use for search (0 = exact, 1 = extended, 2 = approximate)",
     )
     parser.add_argument(
-        "--privacy",
+        "--privacy_status",
         default="PRIVATE",
         help="The privacy seting of created playlists (PRIVATE, PUBLIC, UNLISTED, default PRIVATE)",
         choices=["PRIVATE", "PUBLIC", "UNLISTED", "PRIVATE"],
     )
 
-    return parser.parse_args()
+    return vars(parser.parse_args())
 
 
-def main(shazam_csv_path: Path):
-    df = pd.read_csv(shazam_csv_path, skiprows=1)
+def main(
+    path: Path,
+    ytmusic_playlist_id="+Shazam Playlist",
+    track_sleep=0.5,
+    dry_run=False,
+    algo=0,
+    spotify_playlists_encoding="utf-8",
+    reverse_playlist=False,
+    privacy_status="PRIVATE",
+):
+    if not path.exists():
+        raise FileNotFoundError(path)
+    df = pd.read_csv(path, skiprows=1)
     df.drop_duplicates("TrackKey", inplace=True)
 
     df = df[["Artist", "Title"]]
@@ -93,14 +104,19 @@ def main(shazam_csv_path: Path):
 
     backend.copy_playlist(
         spotify_playlist_id=SHAZAM_PLAYLIST_ID,
-        ytmusic_playlist_id="+Shazam Playlist",
-        track_sleep=0.5,
-        dry_run=False,
+        ytmusic_playlist_id=ytmusic_playlist_id,
+        track_sleep=track_sleep,
+        dry_run=dry_run,
         spotify_playlists_encoding="utf-8",
-        reverse_playlist=False,
-        privacy_status="PRIVATE",
+        reverse_playlist=reverse_playlist,
+        privacy_status=privacy_status,
+        yt_search_algo=algo,
     )
 
 
+def run_main():
+    main(**parse_arguments())
+
+
 if __name__ == "__main__":
-    main(parse_arguments())
+    run_main()
