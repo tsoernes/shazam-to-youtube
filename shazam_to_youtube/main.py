@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 import json
-import sys
 import time
 from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
 from spotify2ytmusic import backend
-from ytmusicapi.setup import main as yt_auth_main
+
+from shazam_to_youtube.yt_auth import run_setup_oauth
 
 # Download CSV at https://www.shazam.com/myshazam
 base_dir = Path.home() / "Downloads"
 default_shazam_csv_path = base_dir / "shazamlibrary.csv"
+default_oauth_path = Path.home() / ".ytmusicapi" / "oauth.json"
 
 
 def parse_arguments():
@@ -51,6 +52,12 @@ def parse_arguments():
         help="The privacy seting of created playlists (PRIVATE, PUBLIC, UNLISTED, default PRIVATE)",
         choices=["PRIVATE", "PUBLIC", "UNLISTED", "PRIVATE"],
     )
+    parser.add_argument(
+        "--oauth_path",
+        type=Path,
+        default=default_oauth_path,
+        help="Path for Youtube oauth token",
+    )
 
     return vars(parser.parse_args())
 
@@ -64,24 +71,24 @@ def main(
     spotify_playlists_encoding="utf-8",
     reverse_playlist=False,
     privacy_status="PRIVATE",
+    oauth_path=default_oauth_path,
 ):
     if not path.exists():
         raise FileNotFoundError(path)
-    oauth_path = Path().cwd() / "oath.json"
+
+    # Check the YT oauth token
     if oauth_path.exists():
         # Load the oauth.json file
-        with open("oauth.json", "r") as file:
+        with open(oauth_path, "r") as file:
             oauth_data = json.load(file)
         # Get the current time in seconds since epoch
         current_time = time.time()
         # Check if the token has expired
         if current_time > oauth_data["expires_at"]:
             print("The token has expired.")
-            sys.argv = ["ytmusicapi", "oauth"]
-            yt_auth_main()
+            run_setup_oauth(oauth_path)
     else:
-        sys.argv = ["ytmusicapi", "oauth"]
-        yt_auth_main()
+        run_setup_oauth(oauth_path)
 
     df = pd.read_csv(path, skiprows=1)
     df.drop_duplicates("TrackKey", inplace=True)
