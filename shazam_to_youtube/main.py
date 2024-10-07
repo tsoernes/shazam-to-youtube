@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+import json
 import sys
+import time
 from argparse import ArgumentParser
 from pathlib import Path
 
@@ -17,7 +19,7 @@ def parse_arguments():
     parser.add_argument(
         "--path",
         type=Path,
-        help="Shazam playlist CSV path",
+        help="Shazam playlist CSV path. Download your Shazam playlist CSV by visiting https://www.shazam.com/myshazam",
         default=default_shazam_csv_path,
     )
     parser.add_argument(
@@ -66,13 +68,25 @@ def main(
     if not path.exists():
         raise FileNotFoundError(path)
     oauth_path = Path().cwd() / "oath.json"
-    if not oauth_path.exists():
+    if oauth_path.exists():
+        # Load the oauth.json file
+        with open("oauth.json", "r") as file:
+            oauth_data = json.load(file)
+        # Get the current time in seconds since epoch
+        current_time = time.time()
+        # Check if the token has expired
+        if current_time > oauth_data["expires_at"]:
+            print("The token has expired.")
+            sys.argv = ["ytmusicapi", "oauth"]
+            yt_auth_main()
+    else:
         sys.argv = ["ytmusicapi", "oauth"]
         yt_auth_main()
 
     df = pd.read_csv(path, skiprows=1)
     df.drop_duplicates("TrackKey", inplace=True)
 
+    # Mimick JSON schema expected by spotify2ytmusic
     df = df[["Artist", "Title"]]
     df.columns = "artists", "name"
     df["artists"] = df["artists"].map(lambda s: [{"name": s}])
@@ -88,14 +102,14 @@ def main(
                 "id": SHAZAM_PLAYLIST_ID,
                 "tracks": [
                     {
-                        # This is how spotify2music expects the json to look like
+                        # This is how spotify2music expects the JSON schema to look like
                         "track": {
-                            "artists": [{"name": "ARTIST1"}],
+                            "artists": [{"name": "EXAMPLE_ARTIST1"}],
                             "album": {
-                                "name": "ALBUM1",
+                                "name": "EXAMPLEALBUM1",
                                 "artists": [{"name": "ALBUM_ARTIST1"}],
                             },
-                            "name": "TRACK_NAME",
+                            "name": "EXAMPLE_TRACK_NAME",
                         }
                     }
                 ],
@@ -107,14 +121,16 @@ def main(
     tracks = [{"track": t} for t in tracks]
     playlists["playlists"][0]["tracks"] = tracks
 
-    backend.load_playlists_json = lambda x, y: playlists
+    # Monkey patch the spotify2yt library to load the playlist we just created instead
+    # of from a fixed file path
+    backend.load_playlists_json = lambda *args, **kwargs: playlists
 
     backend.copy_playlist(
         spotify_playlist_id=SHAZAM_PLAYLIST_ID,
         ytmusic_playlist_id=ytmusic_playlist_id,
         track_sleep=track_sleep,
         dry_run=dry_run,
-        spotify_playlists_encoding="utf-8",
+        spotify_playlists_encoding=spotify_playlists_encoding,
         reverse_playlist=reverse_playlist,
         privacy_status=privacy_status,
         yt_search_algo=algo,
